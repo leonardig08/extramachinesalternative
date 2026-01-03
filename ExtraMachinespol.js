@@ -479,39 +479,59 @@ listPipes = "pipe"
 
 //thx to morechem.js for the idea
 
-setTemp = 0;
-elements.ajustableHeater = {
-    desc: "Works like a heater but it can be set to a specific temp and needs power to work",
-	color: ["#a1ada5","#ebf5ee","#bac2bc","#848a86","#505251"],
+elements.adjustableHeater = {
+    desc: "Electric heater with configurable max temperature. Requires power.",
+    color: ["#a1ada5","#ebf5ee","#bac2bc","#848a86","#505251"],
     category: "machines",
-	density: 1080,
+    density: 1080,
     state: "solid",
     conduct: 1,
-	movable: false,
-	name: "Ajustable-E-Heater",
-	 onSelect: async function() {
-        var answer4 = await _nousersthingsprompt("Please input the desired maximum temperature of this heater",(setTemp||undefined));
-        if (!answer4) { return }
-		setTemp = answer4;
+    movable: false,
+    name: "Adjustable-E-Heater",
+    insulate: true,
+
+    onSelect: async function(pixel) {
+        let input = await _nousersthingsprompt(
+            "Set maximum temperature for this heater",
+            pixel.setTemp ?? undefined
+        );
+        if (input === null) return;
+
+        let value = Number(input);
+        if (isNaN(value)) return;
+
+        pixel.setTemp = value;
     },
-	tick: function(pixel) {
-        for (var i = 0; i < adjacentCoords.length; i++) {
-            var coords = adjacentCoords[i];
-            var x = pixel.x + coords[0];
-            var y = pixel.y + coords[1];
-            if (!isEmpty(x,y,true)) {
-                var sensed = pixelMap[x][y];
-                if (sensed.con || elements[sensed.element].movable && pixel.charge > 0) {
-                    sensed.temp += setTemp/6;
-					
-                    break;
-                }
+
+    tick: function(pixel) {
+        if (pixel.charge <= 0) {
+            doDefaults(pixel);
+            return;
+        }
+
+        let targetTemp = pixel.setTemp ?? 0;
+
+        for (let i = 0; i < adjacentCoords.length; i++) {
+            let coords = adjacentCoords[i];
+            let x = pixel.x + coords[0];
+            let y = pixel.y + coords[1];
+
+            if (isEmpty(x, y, true)) continue;
+
+            let sensed = pixelMap[x][y];
+            let elem = elements[sensed.element];
+
+            if (!elem) continue;
+
+            if (sensed.temp < targetTemp && (sensed.con || elem.movable)) {
+                sensed.temp += (targetTemp - sensed.temp) / 6;
             }
         }
+
         doDefaults(pixel);
-    },
-	 insulate:true
+    }
 };
+
 
 
 
