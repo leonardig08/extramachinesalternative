@@ -521,13 +521,10 @@ elements.adjustableHeater = {
             console.log(`[Heater] Pixel created at (${pixel.x},${pixel.y}) with temp: ${pixel.setTemp}`);
         }
 
-		console.log(pixel.charge)
-
-        if (pixel.charge <= 0) return;
-
         let targetTemp = pixel.setTemp ?? 0;
 
-        for (let i = 0; i < adjacentCoords.length; i++) {
+        if(pixel.charge > 0){
+            for (let i = 0; i < adjacentCoords.length; i++) {
             let coord = adjacentCoords[i];
             let x = pixel.x + coord[0];
             let y = pixel.y + coord[1];
@@ -545,6 +542,12 @@ elements.adjustableHeater = {
             }
         }
 
+        }
+        else{
+            console.log("Not Powered, skipping")
+        }
+
+        
         doDefaults(pixel);
     }
 };
