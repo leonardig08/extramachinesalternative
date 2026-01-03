@@ -521,6 +521,8 @@ elements.adjustableHeater = {
             console.log(`[Heater] Pixel created at (${pixel.x},${pixel.y}) with temp: ${pixel.setTemp}`);
         }
 
+		console.log(pixel.charge)
+
         if (pixel.charge <= 0) return;
 
         let targetTemp = pixel.setTemp ?? 0;
