@@ -494,7 +494,7 @@ elements.adjustableHeater = {
     onSelect: async function() {
         let input = await _nousersthingsprompt(
             "Set maximum temperature for this heater",
-            currentHeaterTemp || undefined
+            20
         );
         if (input === null) return;
 
