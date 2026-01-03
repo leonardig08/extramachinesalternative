@@ -492,29 +492,36 @@ elements.adjustableHeater = {
     insulate: true,
 
     onSelect: async function() {
+        console.log("[Heater] onSelect triggered"); // log prompt attivato
+
         let input = await _nousersthingsprompt(
             "Set maximum temperature for this heater",
-            20
+            currentHeaterTemp || undefined
         );
-        if (input === null) return;
+        if (input === null) {
+            console.log("[Heater] Prompt canceled");
+            return;
+        }
 
         let value = Number(input);
-        if (isNaN(value)) return;
+        if (isNaN(value)) {
+            console.log("[Heater] Invalid input:", input);
+            return;
+        }
 
         currentHeaterTemp = value;
+        console.log("[Heater] New temperature set:", currentHeaterTemp);
     },
 
     tick: function(pixel) {
 
-        // assegna la temperatura SOLO alla creazione
+        // assegna temperatura solo alla creazione
         if (pixel.start === pixelTicks) {
             pixel.setTemp = currentHeaterTemp;
+            console.log(`[Heater] Pixel created at (${pixel.x},${pixel.y}) with temp: ${pixel.setTemp}`);
         }
 
-        if (pixel.charge <= 0) {
-            doDefaults(pixel);
-            return;
-        }
+        if (pixel.charge <= 0) return;
 
         let targetTemp = pixel.setTemp ?? 0;
 
@@ -527,10 +534,12 @@ elements.adjustableHeater = {
 
             let sensed = pixelMap[x][y];
             let elem = elements[sensed.element];
-            if (!elem) continue;
+            if (!elem || elem.insulate) continue;
 
-            if (sensed.temp < targetTemp && (sensed.con || elem.movable)) {
-                sensed.temp += (targetTemp - sensed.temp) / 6;
+            if (sensed.temp < targetTemp) {
+                let delta = (targetTemp - sensed.temp) / 6;
+                sensed.temp += delta;
+                console.log(`[Heater] Heating pixel at (${x},${y}): +${delta.toFixed(2)} → ${sensed.temp.toFixed(2)}°`);
             }
         }
 
