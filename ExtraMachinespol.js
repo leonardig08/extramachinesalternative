@@ -476,8 +476,9 @@ elements.AndroidHead = {
 
 listPipes = "pipe"
 
+// thx to morechem.js for the idea
 
-//thx to morechem.js for the idea
+let currentHeaterTemp = 0;
 
 elements.adjustableHeater = {
     desc: "Electric heater with configurable max temperature. Requires power.",
@@ -490,20 +491,26 @@ elements.adjustableHeater = {
     name: "Adjustable-E-Heater",
     insulate: true,
 
-    onSelect: async function(pixel) {
+    onSelect: async function() {
         let input = await _nousersthingsprompt(
             "Set maximum temperature for this heater",
-            pixel.setTemp ?? undefined
+            currentHeaterTemp || undefined
         );
         if (input === null) return;
 
         let value = Number(input);
         if (isNaN(value)) return;
 
-        pixel.setTemp = value;
+        currentHeaterTemp = value;
     },
 
     tick: function(pixel) {
+
+        // assegna la temperatura SOLO alla creazione
+        if (pixel.start === pixelTicks) {
+            pixel.setTemp = currentHeaterTemp;
+        }
+
         if (pixel.charge <= 0) {
             doDefaults(pixel);
             return;
@@ -512,15 +519,14 @@ elements.adjustableHeater = {
         let targetTemp = pixel.setTemp ?? 0;
 
         for (let i = 0; i < adjacentCoords.length; i++) {
-            let coords = adjacentCoords[i];
-            let x = pixel.x + coords[0];
-            let y = pixel.y + coords[1];
+            let coord = adjacentCoords[i];
+            let x = pixel.x + coord[0];
+            let y = pixel.y + coord[1];
 
             if (isEmpty(x, y, true)) continue;
 
             let sensed = pixelMap[x][y];
             let elem = elements[sensed.element];
-
             if (!elem) continue;
 
             if (sensed.temp < targetTemp && (sensed.con || elem.movable)) {
